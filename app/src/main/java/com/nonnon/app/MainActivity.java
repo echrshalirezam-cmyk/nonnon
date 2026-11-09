@@ -313,6 +313,7 @@ public class MainActivity extends Activity implements TextToSpeech.OnInitListene
     private void render() {
         root = vertical();
         root.setBackgroundColor(BG);
+        root.setLayoutDirection(View.LAYOUT_DIRECTION_RTL);
         setContentView(root);
 
         LinearLayout header = horizontal();
