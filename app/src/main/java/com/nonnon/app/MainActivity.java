@@ -466,23 +466,16 @@ public class MainActivity extends Activity implements TextToSpeech.OnInitListene
         name.setHint("مثلاً سارا");
         name.setPadding(dp(14), dp(10), dp(14), dp(10));
         name.setBackground(shape(Color.rgb(255, 240, 247), 0, 14));
-        new AlertDialog.Builder(this)
-                .setTitle("ساخت پروفایل")
+        new AlertDialog.Builder(this).setTitle("ساخت پروفایل")
                 .setMessage("نامی انتخاب کن تا نتیجه‌های یادگیری‌ات جداگانه ذخیره شوند.")
                 .setView(name)
-                .setNegativeButton("انصراف", (d, w) -> {
-                    if (firstProfile && profilesPrefs.getStringSet("profile_ids", new java.util.HashSet<>()).isEmpty()) {
-                        page = "profiles";
-                        render();
-                    }
-                })
+                .setNegativeButton("انصراف", (d, w) -> { page = "profiles"; render(); })
                 .setPositiveButton("ساختن", (d, w) -> {
                     String profileName = name.getText().toString().trim();
                     if (profileName.isEmpty()) profileName = "زبان‌آموز " +
                             (profilesPrefs.getStringSet("profile_ids", new java.util.HashSet<>()).size() + 1);
                     createProfile(profileName);
-                }).setOnCancelListener(d -> { page = "profiles"; render(); })
-                .show();
+                }).setOnCancelListener(d -> { page = "profiles"; render(); }).show();
     }
 
     private void createProfile(String name) {
@@ -491,8 +484,7 @@ public class MainActivity extends Activity implements TextToSpeech.OnInitListene
                 profilesPrefs.getStringSet("profile_ids", new java.util.HashSet<>()));
         boolean migrateOld = ids.isEmpty();
         ids.add(id);
-        profilesPrefs.edit().putStringSet("profile_ids", ids)
-                .putString("name_" + id, name)
+        profilesPrefs.edit().putStringSet("profile_ids", ids).putString("name_" + id, name)
                 .putLong("created_" + id, System.currentTimeMillis()).apply();
         android.content.SharedPreferences target = getSharedPreferences("nonnon_progress_" + id, MODE_PRIVATE);
         if (migrateOld) copyLegacyProgress(target);
@@ -740,25 +732,24 @@ public class MainActivity extends Activity implements TextToSpeech.OnInitListene
         addButton(content, "×  خروج از تمرین", false, () -> {
             new AlertDialog.Builder(this).setMessage("از این تمرین خارج می‌شوی؟")
                     .setNegativeButton("ادامه", (d, w) -> {}).setPositiveButton("خروج", (d, w) -> {
-           private void renderProfile() {
-        title("پروفایل من", "پیشرفت این حساب جدا از بقیه کاربران ذخیره می‌شود.");
+                        page = practiceMode ? "practice" : "lessons"; render();
+                    }).show();
+        });
+        LinearLayout status = horizontal();
+        TextView step = text("پرسش " + (questionIndex + 1) + " از " + questions.size(), 13, MUTED, true);
+        status.addView(step, new LinearLayout.LayoutParams(0, -2, 1));
+        status.addView(text("❤️ " + hearts(), 14, PINK, true));
+        content.addView(status);
+        ProgressBar bar = new ProgressBar(this, null, android.R.attr.progressBarStyleHorizontal);
+        bar.setMax(questions.size()); bar.setProgress(questionIndex);
+        bar.setProgressTintList(android.content.res.ColorStateList.valueOf(PINK));
+        content.addView(bar, new LinearLayout.LayoutParams(-1, dp(9)));
+        gap(content, 24);
+
+        Question q = questions.get(questionIndex);
         LinearLayout card = panel();
-        card.setGravity(Gravity.CENTER);
-        ImageView mascot = new ImageView(this);
-        mascot.setImageResource(R.drawable.nonnon_girl);
-        card.addView(mascot, new LinearLayout.LayoutParams(dp(116), dp(116)));
-        addText(card, currentProfileName(), 20, INK, true);
-        addText(card, "ادامه بده؛ هر روز بهتر می‌شی 💗", 13, MUTED, false);
-        LinearLayout stats = horizontal();
-        stats.addView(statBox("💎 " + xp(), "XP"), new LinearLayout.LayoutParams(0, -2, 1));
-        stats.addView(statBox("🔥 " + streak(), "روز پیاپی"), new LinearLayout.LayoutParams(0, -2, 1));
-        stats.addView(statBox("📘 " + prefs.getInt("completed_total", 0), "درس کامل"), new LinearLayout.LayoutParams(0, -2, 1));
-        card.addView(stats);
-        addButton(content, "تعویض کاربر", false, () -> { page = "profiles"; render(); });
-        addButton(content, "ساخت پروفایل جدید", true, () -> showCreateProfileDialog(false));
-        addButton(content, "تنظیمات برنامه", false, () -> { page = "settings"; render(); });
-    }
-e);
+        card.setBackground(shape(Color.WHITE, Color.rgb(245, 219, 237), 22));
+        addText(card, q.prompt, 20, INK, true);
         if (selectedAnswer == null) {
             addButton(card, "🔊  شنیدن تلفظ  " + q.word.en, false, () -> speak(q.word.en));
             for (String option : q.options) {
@@ -873,19 +864,21 @@ e);
     }
 
     private void renderProfile() {
-        title("پروفایل من", "پیشرفت تو در مسیر یادگیری انگلیسی");
+        title("پروفایل من", "پیشرفت این حساب جدا از بقیه کاربران ذخیره می‌شود.");
         LinearLayout card = panel();
         card.setGravity(Gravity.CENTER);
         ImageView mascot = new ImageView(this);
         mascot.setImageResource(R.drawable.nonnon_girl);
         card.addView(mascot, new LinearLayout.LayoutParams(dp(116), dp(116)));
-        addText(card, "زبان‌آموز nonnon", 20, INK, true);
+        addText(card, currentProfileName(), 20, INK, true);
         addText(card, "ادامه بده؛ هر روز بهتر می‌شی 💗", 13, MUTED, false);
         LinearLayout stats = horizontal();
         stats.addView(statBox("💎 " + xp(), "XP"), new LinearLayout.LayoutParams(0, -2, 1));
         stats.addView(statBox("🔥 " + streak(), "روز پیاپی"), new LinearLayout.LayoutParams(0, -2, 1));
         stats.addView(statBox("📘 " + prefs.getInt("completed_total", 0), "درس کامل"), new LinearLayout.LayoutParams(0, -2, 1));
         card.addView(stats);
+        addButton(content, "تعویض کاربر", false, () -> { page = "profiles"; render(); });
+        addButton(content, "ساخت پروفایل جدید", true, () -> showCreateProfileDialog(false));
         addButton(content, "تنظیمات برنامه", false, () -> { page = "settings"; render(); });
     }
 
