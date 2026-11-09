@@ -548,6 +548,7 @@ public class MainActivity extends Activity implements TextToSpeech.OnInitListene
         ImageView mascot = new ImageView(this);
         mascot.setImageResource(R.drawable.nonnon_girl);
         mascot.setScaleType(ImageView.ScaleType.FIT_CENTER);
+        animateEntrance(mascot);
         heroRow.addView(mascot, new LinearLayout.LayoutParams(dp(126), dp(145)));
         LinearLayout copy = vertical();
         copy.setGravity(Gravity.CENTER_VERTICAL | Gravity.RIGHT);
@@ -610,6 +611,7 @@ public class MainActivity extends Activity implements TextToSpeech.OnInitListene
         addText(info, unlocked ? "⭐  " + (prefs.getBoolean(doneKey("A1", 0, lesson), false) ? "5 / 5" : "شروع نشده") : "☆  0 / 5",
                 12, unlocked ? Color.rgb(224, 164, 25) : MUTED, true);
         row.addView(info, new LinearLayout.LayoutParams(0, dp(90), 1));
+        animateEntrance(row);
         row.setOnClickListener(v -> {
             if (!unlocked) {
                 Toast.makeText(this, "برای باز شدن این درس، درس قبلی را کامل کن.", Toast.LENGTH_SHORT).show();
