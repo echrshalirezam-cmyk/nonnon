@@ -422,6 +422,120 @@ public class MainActivity extends Activity implements TextToSpeech.OnInitListene
         gap(content, 12);
     }
 
+    private void renderProfiles() {
+        title("به nonnon خوش اومدی 💗", "برای شروع، پروفایلت را انتخاب کن یا یک پروفایل تازه بساز.");
+        java.util.Set<String> ids = profilesPrefs.getStringSet("profile_ids", new java.util.HashSet<>());
+        if (ids.isEmpty()) {
+            LinearLayout welcome = panel();
+            welcome.setGravity(Gravity.CENTER);
+            ImageView mascot = new ImageView(this);
+            mascot.setImageResource(R.drawable.nonnon_girl);
+            welcome.addView(mascot, new LinearLayout.LayoutParams(dp(142), dp(142)));
+            addText(welcome, "هر نفر مسیر و نتیجه‌های مخصوص خودش را دارد.", 15, INK, true);
+            addButton(welcome, "ساخت اولین پروفایل", true, () -> showCreateProfileDialog(true));
+            return;
+        }
+        List<String> ordered = new ArrayList<>(ids);
+        Collections.sort(ordered, (a, b) -> Long.compare(
+                profilesPrefs.getLong("created_" + a, 0), profilesPrefs.getLong("created_" + b, 0)));
+        for (String id : ordered) {
+            LinearLayout card = panel();
+            LinearLayout row = horizontal();
+            ImageView avatar = new ImageView(this);
+            avatar.setImageResource(R.drawable.nonnon_girl);
+            row.addView(avatar, new LinearLayout.LayoutParams(dp(64), dp(64)));
+            LinearLayout info = vertical();
+            info.setPadding(dp(12), 0, 0, 0);
+            addText(info, profilesPrefs.getString("name_" + id, "زبان‌آموز"), 17, INK, true);
+            android.content.SharedPreferences progress = getSharedPreferences("nonnon_progress_" + id, MODE_PRIVATE);
+            addText(info, progress.getInt("xp", 0) + " XP  ·  " +
+                    progress.getInt("completed_total", 0) + " درس تکمیل‌شده", 12, MUTED, false);
+            row.addView(info, new LinearLayout.LayoutParams(0, -2, 1));
+            card.addView(row);
+            addButton(card, "ورود به این پروفایل", true, () -> enterProfile(id));
+        }
+        addButton(content, "＋  ساخت پروفایل جدید", false, () -> showCreateProfileDialog(false));
+    }
+
+    private void showCreateProfileDialog(boolean firstProfile) {
+        EditText name = new EditText(this);
+        name.setSingleLine(true);
+        name.setTextSize(16);
+        name.setHint("مثلاً سارا");
+        name.setPadding(dp(14), dp(10), dp(14), dp(10));
+        name.setBackground(shape(Color.rgb(255, 240, 247), 0, 14));
+        new AlertDialog.Builder(this)
+                .setTitle("ساخت پروفایل")
+                .setMessage("نامی انتخاب کن تا نتیجه‌های یادگیری‌ات جداگانه ذخیره شوند.")
+                .setView(name)
+                .setNegativeButton("انصراف", (d, w) -> {
+                    if (firstProfile && profilesPrefs.getStringSet("profile_ids", new java.util.HashSet<>()).isEmpty()) {
+                        page = "profiles";
+                        render();
+                    }
+                })
+                .setPositiveButton("ساختن", (d, w) -> {
+                    String profileName = name.getText().toString().trim();
+                    if (profileName.isEmpty()) profileName = "زبان‌آموز " +
+                            (profilesPrefs.getStringSet("profile_ids", new java.util.HashSet<>()).size() + 1);
+                    createProfile(profileName);
+                }).setOnCancelListener(d -> { page = "profiles"; render(); })
+                .show();
+    }
+
+    private void createProfile(String name) {
+        String id = java.util.UUID.randomUUID().toString().replace("-", "").substring(0, 12);
+        java.util.Set<String> ids = new java.util.HashSet<>(
+                profilesPrefs.getStringSet("profile_ids", new java.util.HashSet<>()));
+        boolean migrateOld = ids.isEmpty();
+        ids.add(id);
+        profilesPrefs.edit().putStringSet("profile_ids", ids)
+                .putString("name_" + id, name)
+                .putLong("created_" + id, System.currentTimeMillis()).apply();
+        android.content.SharedPreferences target = getSharedPreferences("nonnon_progress_" + id, MODE_PRIVATE);
+        if (migrateOld) copyLegacyProgress(target);
+        enterProfile(id);
+    }
+
+    private void copyLegacyProgress(android.content.SharedPreferences target) {
+        android.content.SharedPreferences legacy = getSharedPreferences("nonnon_progress", MODE_PRIVATE);
+        Map<String, ?> values = legacy.getAll();
+        android.content.SharedPreferences.Editor editor = target.edit();
+        for (Map.Entry<String, ?> entry : values.entrySet()) {
+            Object value = entry.getValue();
+            if (value instanceof String) editor.putString(entry.getKey(), (String) value);
+            else if (value instanceof Integer) editor.putInt(entry.getKey(), (Integer) value);
+            else if (value instanceof Long) editor.putLong(entry.getKey(), (Long) value);
+            else if (value instanceof Boolean) editor.putBoolean(entry.getKey(), (Boolean) value);
+            else if (value instanceof Float) editor.putFloat(entry.getKey(), (Float) value);
+            else if (value instanceof java.util.Set) {
+                java.util.Set<String> set = new java.util.HashSet<>();
+                for (Object item : (java.util.Set<?>) value) set.add(String.valueOf(item));
+                editor.putStringSet(entry.getKey(), set);
+            }
+        }
+        editor.apply();
+    }
+
+    private void enterProfile(String id) {
+        activeProfileId = id;
+        profilesPrefs.edit().putString("last_active", id).apply();
+        prefs = getSharedPreferences("nonnon_progress_" + id, MODE_PRIVATE);
+        page = "home";
+        render();
+    }
+
+    private String currentProfileName() {
+        return profilesPrefs.getString("name_" + activeProfileId, "زبان‌آموز nonnon");
+    }
+
+    private void animateEntrance(View view) {
+        view.setAlpha(0f);
+        view.setTranslationY(dp(12));
+        view.animate().alpha(1f).translationY(0f).setStartDelay(entranceIndex++ * 45L)
+                .setDuration(320).setInterpolator(new DecelerateInterpolator()).start();
+    }
+
     private void renderHome() {
         // Approved nonnon home reference: girl mascot, pink welcome panel and vertical lesson path.
         LinearLayout hero = panel();
@@ -622,24 +736,25 @@ public class MainActivity extends Activity implements TextToSpeech.OnInitListene
         addButton(content, "×  خروج از تمرین", false, () -> {
             new AlertDialog.Builder(this).setMessage("از این تمرین خارج می‌شوی؟")
                     .setNegativeButton("ادامه", (d, w) -> {}).setPositiveButton("خروج", (d, w) -> {
-                        page = practiceMode ? "practice" : "lessons"; render();
-                    }).show();
-        });
-        LinearLayout status = horizontal();
-        TextView step = text("پرسش " + (questionIndex + 1) + " از " + questions.size(), 13, MUTED, true);
-        status.addView(step, new LinearLayout.LayoutParams(0, -2, 1));
-        status.addView(text("❤️ " + hearts(), 14, PINK, true));
-        content.addView(status);
-        ProgressBar bar = new ProgressBar(this, null, android.R.attr.progressBarStyleHorizontal);
-        bar.setMax(questions.size()); bar.setProgress(questionIndex);
-        bar.setProgressTintList(android.content.res.ColorStateList.valueOf(PINK));
-        content.addView(bar, new LinearLayout.LayoutParams(-1, dp(9)));
-        gap(content, 24);
-
-        Question q = questions.get(questionIndex);
+           private void renderProfile() {
+        title("پروفایل من", "پیشرفت این حساب جدا از بقیه کاربران ذخیره می‌شود.");
         LinearLayout card = panel();
-        card.setBackground(shape(Color.WHITE, Color.rgb(245, 219, 237), 22));
-        addText(card, q.prompt, 20, INK, true);
+        card.setGravity(Gravity.CENTER);
+        ImageView mascot = new ImageView(this);
+        mascot.setImageResource(R.drawable.nonnon_girl);
+        card.addView(mascot, new LinearLayout.LayoutParams(dp(116), dp(116)));
+        addText(card, currentProfileName(), 20, INK, true);
+        addText(card, "ادامه بده؛ هر روز بهتر می‌شی 💗", 13, MUTED, false);
+        LinearLayout stats = horizontal();
+        stats.addView(statBox("💎 " + xp(), "XP"), new LinearLayout.LayoutParams(0, -2, 1));
+        stats.addView(statBox("🔥 " + streak(), "روز پیاپی"), new LinearLayout.LayoutParams(0, -2, 1));
+        stats.addView(statBox("📘 " + prefs.getInt("completed_total", 0), "درس کامل"), new LinearLayout.LayoutParams(0, -2, 1));
+        card.addView(stats);
+        addButton(content, "تعویض کاربر", false, () -> { page = "profiles"; render(); });
+        addButton(content, "ساخت پروفایل جدید", true, () -> showCreateProfileDialog(false));
+        addButton(content, "تنظیمات برنامه", false, () -> { page = "settings"; render(); });
+    }
+e);
         if (selectedAnswer == null) {
             addButton(card, "🔊  شنیدن تلفظ  " + q.word.en, false, () -> speak(q.word.en));
             for (String option : q.options) {
@@ -835,7 +950,7 @@ public class MainActivity extends Activity implements TextToSpeech.OnInitListene
         LinearLayout about = panel();
         addText(about, "درباره nonnon", 17, INK, true);
         addText(about, "نسخه ۱٫۰ · آموزش انگلیسی با مسیر شش‌سطحی CEFR", 13, MUTED, false);
-        addText(about, "پیشرفت و واژگان این نسخه به‌صورت آفلاین روی دستگاه ذخیره می‌شوند.", 12, MUTED, false);
+        addText(about, "پروفایل‌ها و پیشرفت هر زبان‌آموز جداگانه و به‌صورت آفلاین روی همین دستگاه ذخیره می‌شوند.", 12, MUTED, false);
         addButton(content, "بازنشانی کامل پیشرفت", false, () -> new AlertDialog.Builder(this)
                 .setTitle("بازنشانی پیشرفت")
                 .setMessage("امتیازها، قلب‌ها و درس‌های تکمیل‌شده پاک شوند؟")
