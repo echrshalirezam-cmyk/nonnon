@@ -414,7 +414,7 @@ public class MainActivity extends Activity implements TextToSpeech.OnInitListene
         LinearLayout heroRow = horizontal();
         heroRow.setLayoutDirection(View.LAYOUT_DIRECTION_LTR);
         ImageView mascot = new ImageView(this);
-        mascot.setImageResource(R.drawable.nonnon_mascot);
+        mascot.setImageResource(R.drawable.nonnon_girl);
         mascot.setScaleType(ImageView.ScaleType.FIT_CENTER);
         heroRow.addView(mascot, new LinearLayout.LayoutParams(dp(126), dp(145)));
         LinearLayout copy = vertical();
@@ -683,7 +683,7 @@ public class MainActivity extends Activity implements TextToSpeech.OnInitListene
         LinearLayout card = panel();
         card.setGravity(Gravity.CENTER);
         ImageView mascot = new ImageView(this);
-        mascot.setImageResource(R.drawable.nonnon_mascot);
+        mascot.setImageResource(R.drawable.nonnon_girl);
         card.addView(mascot, new LinearLayout.LayoutParams(dp(130), dp(130)));
         addText(card, "آفرین! عالی پیش رفتی 🎉", 22, PINK, true);
         addText(card, score + " پاسخ درست از ۵ پرسش", 16, INK, true);
@@ -742,7 +742,7 @@ public class MainActivity extends Activity implements TextToSpeech.OnInitListene
         LinearLayout card = panel();
         card.setGravity(Gravity.CENTER);
         ImageView mascot = new ImageView(this);
-        mascot.setImageResource(R.drawable.nonnon_mascot);
+        mascot.setImageResource(R.drawable.nonnon_girl);
         card.addView(mascot, new LinearLayout.LayoutParams(dp(116), dp(116)));
         addText(card, "زبان‌آموز nonnon", 20, INK, true);
         addText(card, "ادامه بده؛ هر روز بهتر می‌شی 💗", 13, MUTED, false);
