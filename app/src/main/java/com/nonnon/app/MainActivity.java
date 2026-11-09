@@ -661,6 +661,8 @@ public class MainActivity extends Activity implements TextToSpeech.OnInitListene
         addButton(card, "تمرین دوباره", false, () -> startLesson(selectedLevel, selectedUnit, selectedLesson, practiceMode));
     }
 
+    private void startPractice() { page = "practice"; render(); }
+
     private void renderPractice() {
         title("تمرین روزانه", "پنج پرسش کوتاه برای مرور و تثبیت آموخته‌ها.");
         LinearLayout card = panel();
