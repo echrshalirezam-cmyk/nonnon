@@ -349,10 +349,13 @@ public class MainActivity extends Activity implements TextToSpeech.OnInitListene
         settings.setOnClickListener(v -> { page = "settings"; render(); });
         header.addView(settings, new LinearLayout.LayoutParams(0, dp(46), 1));
         root.addView(header);
+        }
 
+        if (!"profiles".equals(page)) {
         View line = new View(this);
         line.setBackgroundColor(Color.rgb(246, 225, 238));
         root.addView(line, new LinearLayout.LayoutParams(-1, dp(1)));
+        }
 
         ScrollView scroll = new ScrollView(this);
         scroll.setFillViewport(true);
@@ -378,7 +381,6 @@ public class MainActivity extends Activity implements TextToSpeech.OnInitListene
             default: renderHome();
         }
         if (!"profiles".equals(page)) renderNav();
-        }
         if ("profiles".equals(page)) renderProfiles();
     }
 
