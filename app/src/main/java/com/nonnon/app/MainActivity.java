@@ -317,20 +317,24 @@ public class MainActivity extends Activity implements TextToSpeech.OnInitListene
         setContentView(root);
 
         LinearLayout header = horizontal();
-        pad(header, 18, 7, 18, 7);
-        ImageView logo = new ImageView(this);
-        logo.setImageResource(com.nonnon.app.R.drawable.nonnon_mascot);
-        header.addView(logo, new LinearLayout.LayoutParams(dp(48), dp(48)));
-        LinearLayout brand = vertical();
-        TextView name = text("nonnon", 23, PINK, true);
-        brand.addView(name);
-        brand.addView(text("هر روز یک قدم جلوتر 🌸", 11, MUTED, false));
-        LinearLayout.LayoutParams brandLp = new LinearLayout.LayoutParams(0, -2, 1);
-        brandLp.leftMargin = dp(7);
-        header.addView(brand, brandLp);
-        TextView stats = text("🔥 " + streak() + "   💎 " + xp(), 12, PURPLE, true);
-        stats.setGravity(Gravity.CENTER);
-        header.addView(stats);
+        header.setLayoutDirection(View.LAYOUT_DIRECTION_LTR);
+        pad(header, 13, 7, 13, 7);
+        TextView flag = text("🇬🇧", 22, INK, true);
+        flag.setGravity(Gravity.CENTER);
+        header.addView(flag, new LinearLayout.LayoutParams(0, dp(46), 1));
+        TextView crown = text("👑 " + Math.max(0, xp() / 10), 15, Color.rgb(229, 164, 35), true);
+        crown.setGravity(Gravity.CENTER);
+        header.addView(crown, new LinearLayout.LayoutParams(0, dp(46), 1));
+        TextView fire = text("🔥 " + streak(), 15, Color.rgb(242, 139, 38), true);
+        fire.setGravity(Gravity.CENTER);
+        header.addView(fire, new LinearLayout.LayoutParams(0, dp(46), 1));
+        TextView heart = text("❤️ " + hearts(), 15, PINK, true);
+        heart.setGravity(Gravity.CENTER);
+        header.addView(heart, new LinearLayout.LayoutParams(0, dp(46), 1));
+        TextView settings = text("⚙", 25, INK, true);
+        settings.setGravity(Gravity.CENTER);
+        settings.setOnClickListener(v -> { page = "settings"; render(); });
+        header.addView(settings, new LinearLayout.LayoutParams(0, dp(46), 1));
         root.addView(header);
 
         View line = new View(this);
@@ -354,6 +358,8 @@ public class MainActivity extends Activity implements TextToSpeech.OnInitListene
             case "practice": renderPractice(); break;
             case "words": renderWords(); break;
             case "profile": renderProfile(); break;
+            case "leaderboard": renderLeaderboard(); break;
+            case "rewards": renderRewards(); break;
             case "settings": renderSettings(); break;
             default: renderHome();
         }
@@ -364,25 +370,34 @@ public class MainActivity extends Activity implements TextToSpeech.OnInitListene
         LinearLayout nav = horizontal();
         nav.setGravity(Gravity.CENTER);
         nav.setBackgroundColor(Color.WHITE);
-        pad(nav, 4, 7, 4, 7);
+        nav.setElevation(dp(8));
+        pad(nav, 3, 5, 3, 5);
         String[][] items = {
-                {"⌂", "خانه", "home"}, {"➜", "مسیر", "path"},
-                {"✦", "تمرین", "practice"}, {"▤", "واژه‌ها", "words"},
-                {"☺", "من", "profile"}
+                {"⌂", "خانه", "home"}, {"📖", "درس‌ها", "path"},
+                {"🏆", "جدول رتبه", "leaderboard"}, {"🛡", "پاداش‌ها", "rewards"},
+                {"●", "حساب کاربری", "profile"}
         };
         for (String[] item : items) {
             LinearLayout cell = vertical();
             cell.setGravity(Gravity.CENTER);
-            TextView symbol = text(item[0], 22, page.equals(item[2]) ? PINK : MUTED, true);
+            int active = page.equals(item[2]) ? PINK : MUTED;
+            TextView symbol = text(item[0], 22, active, true);
             symbol.setGravity(Gravity.CENTER);
-            TextView title = text(item[1], 10, page.equals(item[2]) ? PINK : MUTED, true);
-            title.setGravity(Gravity.CENTER);
+            TextView label = text(item[1], 10, active, true);
+            label.setGravity(Gravity.CENTER);
             cell.addView(symbol);
-            cell.addView(title);
+            cell.addView(label);
+            if (page.equals(item[2])) {
+                View marker = new View(this);
+                marker.setBackground(shape(PINK, 0, 5));
+                LinearLayout.LayoutParams mp = new LinearLayout.LayoutParams(dp(28), dp(3));
+                mp.topMargin = dp(3);
+                cell.addView(marker, mp);
+            }
             cell.setOnClickListener(v -> { page = item[2]; render(); });
-            nav.addView(cell, new LinearLayout.LayoutParams(0, -2, 1));
+            nav.addView(cell, new LinearLayout.LayoutParams(0, dp(54), 1));
         }
-        root.addView(nav, new LinearLayout.LayoutParams(-1, dp(58)));
+        root.addView(nav, new LinearLayout.LayoutParams(-1, dp(62)));
     }
 
     private void title(String heading, String subtitle) {
@@ -392,73 +407,91 @@ public class MainActivity extends Activity implements TextToSpeech.OnInitListene
     }
 
     private void renderHome() {
+        // Approved nonnon home reference: girl mascot, pink welcome panel and vertical lesson path.
         LinearLayout hero = panel();
-        hero.setBackground(shape(PALE_PINK, 0, 23));
-        LinearLayout row = horizontal();
+        hero.setBackground(shape(Color.rgb(255, 224, 241), 0, 24));
+        hero.setPadding(dp(10), dp(10), dp(10), dp(10));
+        LinearLayout heroRow = horizontal();
+        heroRow.setLayoutDirection(View.LAYOUT_DIRECTION_LTR);
         ImageView mascot = new ImageView(this);
         mascot.setImageResource(R.drawable.nonnon_mascot);
-        row.addView(mascot, new LinearLayout.LayoutParams(dp(106), dp(106)));
-        LinearLayout wordsBox = vertical();
-        wordsBox.setGravity(Gravity.CENTER_VERTICAL);
-        wordsBox.addView(text("سلام! من نونو هستم 💗", 16, INK, true));
-        wordsBox.addView(text("آماده‌ای امروز انگلیسی یاد بگیری؟", 13, MUTED, false));
-        row.addView(wordsBox, new LinearLayout.LayoutParams(0, -2, 1));
-        hero.addView(row);
-        addText(hero, "هر روز فقط ۵ دقیقه تمرین کن؛ قدم‌به‌قدم پیشرفت می‌کنی.", 13, INK, false);
+        mascot.setScaleType(ImageView.ScaleType.FIT_CENTER);
+        heroRow.addView(mascot, new LinearLayout.LayoutParams(dp(126), dp(145)));
+        LinearLayout copy = vertical();
+        copy.setGravity(Gravity.CENTER_VERTICAL | Gravity.RIGHT);
+        copy.setLayoutDirection(View.LAYOUT_DIRECTION_RTL);
+        addText(copy, "آماده‌ای برای درس امروز؟", 18, INK, true);
+        addText(copy, "با یک درس کوتاه،\nزبان انگلیسی را بهتر یاد بگیر!", 13, MUTED, false);
+        addButton(copy, "▶  شروع درس", true, () -> openNextLesson());
+        heroRow.addView(copy, new LinearLayout.LayoutParams(0, -2, 1));
+        hero.addView(heroRow);
 
-        LinearLayout stats = horizontal();
-        LinearLayout xpCard = vertical();
-        xpCard.setGravity(Gravity.CENTER);
-        xpCard.setBackground(shape(Color.WHITE, 0, 16));
-        pad(xpCard, 10, 10, 10, 10);
-        xpCard.addView(text("💎 " + xp(), 19, PURPLE, true));
-        xpCard.addView(text("امتیاز XP", 11, MUTED, false));
-        LinearLayout.LayoutParams statLp = new LinearLayout.LayoutParams(0, -2, 1);
-        statLp.rightMargin = dp(6);
-        stats.addView(xpCard, statLp);
-        LinearLayout streakCard = vertical();
-        streakCard.setGravity(Gravity.CENTER);
-        streakCard.setBackground(shape(Color.WHITE, 0, 16));
-        pad(streakCard, 10, 10, 10, 10);
-        streakCard.addView(text("🔥 " + streak(), 19, PINK, true));
-        streakCard.addView(text("روز پیاپی", 11, MUTED, false));
-        stats.addView(streakCard, new LinearLayout.LayoutParams(0, -2, 1));
-        LinearLayout heartCard = vertical();
-        heartCard.setGravity(Gravity.CENTER);
-        heartCard.setBackground(shape(Color.WHITE, 0, 16));
-        pad(heartCard, 10, 10, 10, 10);
-        heartCard.addView(text("❤️ " + hearts(), 19, PINK, true));
-        heartCard.addView(text("قلب", 11, MUTED, false));
-        LinearLayout.LayoutParams heartLp = new LinearLayout.LayoutParams(0, -2, 1);
-        heartLp.leftMargin = dp(6);
-        stats.addView(heartCard, heartLp);
-        content.addView(stats);
-        gap(content, 14);
+        gap(content, 13);
+        LinearLayout section = horizontal();
+        TextView heading = text("مسیر یادگیری", 19, INK, true);
+        section.addView(heading, new LinearLayout.LayoutParams(0, -2, 1));
+        TextView all = text("مشاهده همه  ←", 12, PINK, true);
+        all.setGravity(Gravity.CENTER);
+        all.setOnClickListener(v -> { page = "path"; render(); });
+        section.addView(all);
+        content.addView(section);
+        gap(content, 8);
 
+        addHomeLessonNode(0, "معرفی خود", "📖", true);
+        addPathConnector();
+        addHomeLessonNode(1, "در محل کار", "🔒", prefs.getBoolean(doneKey("A1", 0, 0), false));
+        addPathConnector();
+        addHomeLessonNode(2, "فعالیت‌های روزمره", "🎧", prefs.getBoolean(doneKey("A1", 0, 1), false));
+
+        gap(content, 10);
         LinearLayout daily = panel();
-        addText(daily, "هدف روزانه", 17, INK, true);
+        addText(daily, "هدف روزانه 🌟", 16, INK, true);
         int goal = prefs.getInt("daily_goal", 20);
         int today = prefs.getInt(todayKey(), 0);
-        addText(daily, today + " از " + goal + " امتیاز XP", 13, MUTED, false);
+        addText(daily, today + " از " + goal + " امتیاز XP", 12, MUTED, false);
         ProgressBar bar = new ProgressBar(this, null, android.R.attr.progressBarStyleHorizontal);
         bar.setMax(goal);
         bar.setProgress(Math.min(today, goal));
         bar.setProgressTintList(android.content.res.ColorStateList.valueOf(PINK));
-        bar.setProgressBackgroundTintList(android.content.res.ColorStateList.valueOf(PALE_PINK));
+        bar.setProgressBackgroundTintList(android.content.res.ColorStateList.valueOf(Color.rgb(255, 226, 240)));
         daily.addView(bar, new LinearLayout.LayoutParams(-1, dp(9)));
-        gap(daily, 5);
+    }
 
-        LinearLayout continueCard = panel();
-        addText(continueCard, "مسیر یادگیری تو", 18, INK, true);
-        addText(continueCard, "سطح A1 · درس‌های کوتاه و سرگرم‌کننده", 13, MUTED, false);
-        addButton(continueCard, "شروع درس بعدی  ←", true, () -> openNextLesson());
-        addButton(continueCard, "دیدن همه سطح‌ها", false, () -> { page = "path"; render(); });
+    private void addHomeLessonNode(int lesson, String label, String symbol, boolean unlocked) {
+        LinearLayout row = horizontal();
+        row.setLayoutDirection(View.LAYOUT_DIRECTION_LTR);
+        TextView node = text(symbol, 30, unlocked ? Color.WHITE : Color.rgb(139, 143, 163), true);
+        node.setGravity(Gravity.CENTER);
+        node.setBackground(shape(unlocked ? GREEN : Color.rgb(235, 236, 244),
+                unlocked ? Color.rgb(255, 220, 80) : Color.rgb(220, 222, 232), 60));
+        LinearLayout.LayoutParams nodeLp = new LinearLayout.LayoutParams(dp(94), dp(94));
+        nodeLp.rightMargin = dp(12);
+        row.addView(node, nodeLp);
 
-        LinearLayout quick = panel();
-        addText(quick, "تمرین‌های سریع", 17, INK, true);
-        addButton(quick, "🎯  تمرین روزانه", false, () -> startPractice());
-        addButton(quick, "📚  مرور واژه‌ها", false, () -> { page = "words"; render(); });
-        addButton(quick, "⚙️  تنظیمات", false, () -> { page = "settings"; render(); });
+        LinearLayout info = vertical();
+        info.setGravity(Gravity.CENTER_VERTICAL);
+        info.setLayoutDirection(View.LAYOUT_DIRECTION_RTL);
+        info.setPadding(dp(14), dp(11), dp(14), dp(11));
+        info.setBackground(shape(unlocked ? Color.rgb(226, 249, 224) : Color.rgb(242, 242, 248), 0, 20));
+        addText(info, "درس " + (lesson + 1), 15, unlocked ? INK : MUTED, true);
+        addText(info, label, 14, unlocked ? INK : MUTED, true);
+        addText(info, unlocked ? "⭐  " + (prefs.getBoolean(doneKey("A1", 0, lesson), false) ? "5 / 5" : "شروع نشده") : "☆  0 / 5",
+                12, unlocked ? Color.rgb(224, 164, 25) : MUTED, true);
+        row.addView(info, new LinearLayout.LayoutParams(0, dp(90), 1));
+        row.setOnClickListener(v -> {
+            if (!unlocked) {
+                Toast.makeText(this, "برای باز شدن این درس، درس قبلی را کامل کن.", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            startLesson("A1", 0, lesson, false);
+        });
+        content.addView(row, new LinearLayout.LayoutParams(-1, -2));
+    }
+
+    private void addPathConnector() {
+        TextView dots = text("⋮\n⋮\n⋮", 18, Color.rgb(197, 190, 211), true);
+        dots.setGravity(Gravity.CENTER);
+        content.addView(dots, new LinearLayout.LayoutParams(dp(94), dp(25)));
     }
 
     private void renderPath() {
@@ -729,6 +762,36 @@ public class MainActivity extends Activity implements TextToSpeech.OnInitListene
         b.addView(text(value, 15, PURPLE, true));
         b.addView(text(label, 10, MUTED, false));
         return b;
+    }
+
+    private void renderLeaderboard() {
+        title("جدول رتبه 🏆", "امتیازهای تمرینت را دنبال کن و رکورد خودت را بهتر کن.");
+        LinearLayout card = panel();
+        card.setGravity(Gravity.CENTER);
+        addText(card, "رتبه فعلی", 14, MUTED, true);
+        addText(card, "🥇  زبان‌آموز پرتلاش", 20, INK, true);
+        addText(card, xp() + " XP", 26, PINK, true);
+        addText(card, "این جدول فعلاً رتبه‌بندی محلی دستگاه تو را نشان می‌دهد.", 12, MUTED, false);
+        addButton(content, "رفتن به مسیر درس‌ها", true, () -> { page = "path"; render(); });
+    }
+
+    private void renderRewards() {
+        title("پاداش‌ها 🎁", "با تمرین روزانه نشان‌های تازه بگیر.");
+        int completed = prefs.getInt("completed_total", 0);
+        String[][] rewards = {
+                {"🌱", "شروع‌کننده", "اولین درس را کامل کن", String.valueOf(completed >= 1)},
+                {"🔥", "پشتکار", "۵ درس را کامل کن", String.valueOf(completed >= 5)},
+                {"⭐", "ستاره یادگیری", "۱۰ درس را کامل کن", String.valueOf(completed >= 10)},
+                {"💎", "صد امتیازی", "۱۰۰ امتیاز XP جمع کن", String.valueOf(xp() >= 100)}
+        };
+        for (String[] reward : rewards) {
+            LinearLayout card = panel();
+            addText(card, reward[0] + "  " + reward[1], 17, INK, true);
+            addText(card, reward[2], 12, MUTED, false);
+            boolean earned = Boolean.parseBoolean(reward[3]);
+            addText(card, earned ? "✓ دریافت شد" : "🔒 هنوز قفل است",
+                    12, earned ? GREEN : MUTED, true);
+        }
     }
 
     private void renderSettings() {
