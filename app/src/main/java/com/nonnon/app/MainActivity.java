@@ -10,7 +10,9 @@ import android.speech.tts.TextToSpeech;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.DecelerateInterpolator;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
@@ -63,6 +65,9 @@ public class MainActivity extends Activity implements TextToSpeech.OnInitListene
     private TextToSpeech tts;
     private boolean ttsReady = false;
     private android.content.SharedPreferences prefs;
+    private android.content.SharedPreferences profilesPrefs;
+    private String activeProfileId = "";
+    private int entranceIndex = 0;
 
     private static class Word {
         final String en, fa, example, pronunciation;
@@ -87,9 +92,10 @@ public class MainActivity extends Activity implements TextToSpeech.OnInitListene
         getWindow().setNavigationBarColor(BG);
         getWindow().getDecorView().setSystemUiVisibility(
                 View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR | View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR);
-        prefs = getSharedPreferences("nonnon_progress", MODE_PRIVATE);
+        profilesPrefs = getSharedPreferences("nonnon_profiles", MODE_PRIVATE);
         seedWords();
         tts = new TextToSpeech(this, this);
+        page = "profiles";
         render();
     }
 
@@ -257,6 +263,7 @@ public class MainActivity extends Activity implements TextToSpeech.OnInitListene
                 ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
         lp.bottomMargin = dp(13);
         content.addView(p, lp);
+        animateEntrance(p);
         return p;
     }
 
@@ -271,7 +278,11 @@ public class MainActivity extends Activity implements TextToSpeech.OnInitListene
         b.setMinHeight(dp(48));
         b.setPadding(dp(18), dp(8), dp(18), dp(8));
         b.setElevation(primary ? dp(2) : 0);
-        b.setOnClickListener(v -> action.run());
+        b.setOnClickListener(v -> {
+            v.animate().scaleX(0.96f).scaleY(0.96f).setDuration(75)
+                    .withEndAction(() -> v.animate().scaleX(1f).scaleY(1f).setDuration(110).start()).start();
+            action.run();
+        });
         LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
         lp.topMargin = dp(8);
@@ -316,6 +327,8 @@ public class MainActivity extends Activity implements TextToSpeech.OnInitListene
         root.setLayoutDirection(View.LAYOUT_DIRECTION_RTL);
         setContentView(root);
 
+        entranceIndex = 0;
+        if (!"profiles".equals(page)) {
         LinearLayout header = horizontal();
         header.setLayoutDirection(View.LAYOUT_DIRECTION_LTR);
         pad(header, 13, 7, 13, 7);
@@ -349,6 +362,7 @@ public class MainActivity extends Activity implements TextToSpeech.OnInitListene
         root.addView(scroll, new LinearLayout.LayoutParams(-1, 0, 1));
 
         switch (page) {
+            case "profiles": break;
             case "home": renderHome(); break;
             case "path": renderPath(); break;
             case "units": renderUnits(); break;
@@ -363,7 +377,9 @@ public class MainActivity extends Activity implements TextToSpeech.OnInitListene
             case "settings": renderSettings(); break;
             default: renderHome();
         }
-        renderNav();
+        if (!"profiles".equals(page)) renderNav();
+        }
+        if ("profiles".equals(page)) renderProfiles();
     }
 
     private void renderNav() {
